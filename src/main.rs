@@ -1,12 +1,11 @@
 use calamine::{open_workbook, Reader, Xlsx};
 use chrono::{DateTime, Timelike};
-use pcap::Capture;
-use std::collections::{BTreeMap, HashMap};
-use plotters::prelude::*;
-use plotters::prelude::Palette99;
-use pnet;
 use clap::Parser;
-
+use pcap::Capture;
+use plotters::prelude::Palette99;
+use plotters::prelude::*;
+use pnet;
+use std::collections::{BTreeMap, HashMap};
 
 /// Simple tool to analyze device activity in a PCAP file
 #[derive(Parser, Debug)]
@@ -23,10 +22,14 @@ struct Args {
     /// Output file for the generated graph
     #[arg(short, long)]
     output_file: String,
+
+    /// Select one or more devices to analyze (optional, can be repeated)
+    #[arg(short, long, num_args = 0.., action = clap::ArgAction::Append)]
+    selected_device: Vec<String>,
 }
 
 /// Load MAC addresses from an Excel file
-fn load_mac_addresses(file: &str) -> HashMap<String, String> {
+fn load_mac_addresses(file: &str, selected_devices: &Vec<String>) -> HashMap<String, String> {
     let mut workbook: Xlsx<_> = open_workbook(file).expect("Impossible to read the Excel file");
     let mut mac_mapping = HashMap::new();
     let names = workbook.sheet_names().to_owned();
@@ -35,7 +38,13 @@ fn load_mac_addresses(file: &str) -> HashMap<String, String> {
         for row in range.rows().skip(1) {
             let device = row[1].to_string();
             let mac = row[2].to_string().to_lowercase();
-            mac_mapping.insert(mac, device);
+            if !selected_devices.is_empty() {
+                if selected_devices.contains(&device) {
+                    mac_mapping.insert(mac, device);
+                }
+            } else {
+                mac_mapping.insert(mac, device);
+            }
         }
     }
     println!("Loaded MAC addresses for {} devices", mac_mapping.len());
@@ -43,7 +52,10 @@ fn load_mac_addresses(file: &str) -> HashMap<String, String> {
 }
 
 /// Analyze a PCAP file for device activity
-fn analyze_pcap(pcap_file: &str, mac_mapping: &HashMap<String, String>) -> BTreeMap<String, Vec<u32>> {
+fn analyze_pcap(
+    pcap_file: &str,
+    mac_mapping: &HashMap<String, String>,
+) -> BTreeMap<String, Vec<u32>> {
     let mut activity: BTreeMap<String, Vec<u32>> = BTreeMap::new();
     let mut cap = Capture::from_file(pcap_file).expect("Impossible to read the PCAP file");
 
@@ -99,7 +111,11 @@ fn plot_device_activity(activity: &BTreeMap<String, Vec<u32>>, output_file: &str
             .legend(move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color.clone()));
     }
 
-    chart.configure_series_labels().border_style(&BLACK).draw().unwrap();
+    chart
+        .configure_series_labels()
+        .border_style(&BLACK)
+        .draw()
+        .unwrap();
     println!("Generated graph: {}", output_file);
 }
 
@@ -108,8 +124,9 @@ fn main() {
     let device_file = args.device_file;
     let pcap_file = args.pcap_file;
     let output_file = args.output_file;
+    let selected_devices = args.selected_device;
 
-    let mac_mapping = load_mac_addresses(&device_file);
+    let mac_mapping = load_mac_addresses(&device_file, &selected_devices);
     let activity = analyze_pcap(&pcap_file, &mac_mapping);
     plot_device_activity(&activity, &output_file);
 }
