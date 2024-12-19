@@ -20,7 +20,7 @@ if (-Not (Test-Path -Path $analyzerExe)) {
     exit 1
 }
 if (-Not (Test-Path -Path $deviceListFile)) {
-    Write-Error "The devices list in a text file is not found : $deviceListFile"
+    Write-Error "The excel file is not found : $deviceListFile"
     exit 1
 }
 
