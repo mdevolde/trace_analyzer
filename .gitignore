@@ -1,6 +1,8 @@
 /target
+/output
 Packet.lib
 wpcap.lib
 *.xlsx
 *.pcap
 *.png
+*.txt
