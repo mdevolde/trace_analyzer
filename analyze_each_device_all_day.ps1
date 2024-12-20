@@ -3,7 +3,8 @@ param (
     [string]$deviceListFile,
     [string]$outputFolder,
     [string]$analyzerExe,
-    [string]$deviceFile
+    [string]$deviceFile,
+    [switch]$median
 )
 
 # Check that the mandatory parameters are set
@@ -35,11 +36,16 @@ If (-Not (Test-Path -Path $outputFolder)) {
 foreach ($device in $devices) {
     $device = $device -replace "`r", "" # Remove windows carriage return
     $sanitizedDeviceName = $device -replace '[\\/:*?"<>|]', '_' -replace '\s+', '_' # Make sure to have a valid file name
-    $deviceOutput = Join-Path -Path $outputFolder -ChildPath "${sanitizedDeviceName}.png"
-
-    Write-Host "Analyse for the device : $device"
-
-    & $analyzerExe -d $deviceListFile -P $pcapFolder -o $deviceOutput -v 0 -s "$device"
+    
+    if ($median) {
+        $deviceOutput = Join-Path -Path $outputFolder -ChildPath "${sanitizedDeviceName}_median.png"
+        Write-Host "Analyse for the device with median : $device"
+        & $analyzerExe -d $deviceListFile -P $pcapFolder -o $deviceOutput -v 0 -s "$device" --median
+    } else {
+        $deviceOutput = Join-Path -Path $outputFolder -ChildPath "${sanitizedDeviceName}.png"
+        Write-Host "Analyse for the device : $device"
+        & $analyzerExe -d $deviceListFile -P $pcapFolder -o $deviceOutput -v 0 -s "$device"
+    }
 }
 
 Write-Host "Analysis done, check the output folder : $outputFolder"

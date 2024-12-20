@@ -60,9 +60,15 @@ cargo run --release -- -d .\devices.xlsx -p .\2021_11_02.pcap -o result.png -s "
 ### Analyze a pcap folder
 To analyze the activity in a folder containing PCAP files, you can issue this command (replace the paths with the ones on your machine):
 ```powershell
-cargo run --release -- -d .\devices.xlsx -P "E:\test" -o result.png -s "Atomi Coffee Maker"
+cargo run --release -- -d .\devices.xlsx -P "E:\PCAP" -o result.png -s "Atomi Coffee Maker"
 ```
 This command will give, for the given device, a comparison, for all PCAP files in the folder, of requests per hour, on the same graph.
+
+### Analyze a pcap folder (median)
+It's also possible to generate a graph with the median of the requests per hour for a device, for all PCAP files in a folder. To do so, you can issue this command (replace the paths with the ones on your machine):
+```powershell
+cargo run --release -- -d .\devices.xlsx -P "E:\PCAP" -o result.png -s "Atomi Coffee Maker" --median
+```
 
 ## Given ps1 scripts
 There are also two given scripts (for Windows), which automate the execution of graph generation, for a multitude of appliances.
@@ -75,11 +81,16 @@ To automate execution of the command given in [Section : Analyse a pcap file for
 This command will, for all the PCAP files in the given folder, make an individual graph of all the devices given in the text file, then make the graph with all the devices in the PCAP.
 
 ### Analyze each device activity for all pcap files
-To automate execution of the command given in [Section : Analyze a pcap folder](#analyze-a-pcap-folder), you can run the script `analyze_each_device_all_day.ps1` (replace the paths with those of your machine):
+To automate execution of the command given in [Section : Analyze a pcap folder](#analyze-a-pcap-folder) and the command given in [Section : Analyze a pcap folder (median)](#analyze-a-pcap-folder-(median)), you can run the script `analyze_each_device_all_day.ps1` (replace the paths with those of your machine):
 ```powershell
 .\analyze_each_device_all_day.ps1 -pcapFolder "E:\test" -deviceListFile "devices.xlsx" -outputFolder "output" -analyzerExe ".\target\release\trace_analyzer.exe" -deviceFile "devices.txt"
 ```
 This command will, for all the devices given in the text file, generate the activity comparison graph for this device between all the PCAP files given in the folder.
+
+There is also the possibility to add the `-median` flag to the command, to generate the median graph instead of the comparison graph (replace the paths with those of your machine):
+```powershell
+.\analyze_each_device_all_day.ps1 -pcapFolder "E:\test" -deviceListFile "devices.xlsx" -outputFolder "output" -analyzerExe ".\target\release\trace_analyzer.exe" -deviceFile "devices.txt" -median
+```
 
 #### Note
 - The `devices.txt` file should contain the names of the devices you want to analyze, one per line.
